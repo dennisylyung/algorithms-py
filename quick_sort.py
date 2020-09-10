@@ -1,3 +1,4 @@
+import random
 from typing import List
 
 
@@ -64,7 +65,6 @@ def quick_sort(arr: List[int], pivot_strategy='random', start=0, end=None) -> in
 
 
 if __name__ == '__main__':
-    import random
 
     print(f'=====sorting randomly shuffled array=====')
 
