@@ -2,10 +2,17 @@
 Classic algorithms included in the Stanford [algorithm course](https://www.coursera.org/specializations/algorithms?) on Coursera, implemented in Python
 
 ## Alogorithms
-* Karatsuba Integer Multiplication
+### Arithmetic
+* Integer Multiplication: Karatsuba's algorithm
+### Array
 * Merge Sort
 * Quick Sort
 * Linear Search
 * Inversion Count
-* Karger minimum cuts
+### Graph
+* Minimum Cut: Karger's algorithm
+* Graph search: BFS, DFS
+* Shortest path
+* Topological sort
+* Strongly Connected Components: Kosaraju's algorithm
 
