@@ -11,8 +11,7 @@ Classic algorithms included in the Stanford [algorithm course](https://www.cours
 * Inversion Count
 ### Graph
 * Minimum Cut: Karger's algorithm
-* Graph search: BFS, DFS
-* Shortest path
-* Topological sort
+* Graph search: BFS, DFS, topological sort
 * Strongly Connected Components: Kosaraju's algorithm
+* Shortest path: BFS, Dijkstra's alogrithm
 
