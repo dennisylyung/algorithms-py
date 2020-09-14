@@ -15,3 +15,5 @@ Classic algorithms included in the Stanford [algorithm course](https://www.cours
 * Strongly Connected Components: Kosaraju's algorithm
 * Shortest path: BFS, Dijkstra's alogrithm
 
+## Data Structures
+* Heap
