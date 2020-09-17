@@ -17,3 +17,4 @@ Classic algorithms included in the Stanford [algorithm course](https://www.cours
 
 ## Data Structures
 * Heap
+* Hash table
