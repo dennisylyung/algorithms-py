@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import random
 import unittest
-from typing import Dict, List, Tuple, Any, Iterable, Union
+from typing import Dict, List, Tuple, Any, Iterable
 
 
 class MinHeap:
@@ -72,7 +74,7 @@ class MinHeap:
     def __bubble_down(self, i):
         while True:
             child = self.__smallest_child(i)
-            if child is not None and self.items[child][0] < self.items[i][0]:
+            if child and self.items[child][0] < self.items[i][0]:
                 self.__swap(i, child)
                 i = child
             else:
@@ -240,25 +242,25 @@ class TestMinHeap(unittest.TestCase):
         self.assertEqual(len(heap.items), 9)
 
 
-class WeightedDirectedGraph:
+class WeightedUndirectedGraph:
     """
-    A directed graph with edge weights.
+    An undirected graph with edge weights.
     """
 
     def __init__(self, vertices: Dict[int, List[int]], edges: Dict[int, Tuple[int, int, float]]):
         """
         Initialize an adjacency lists representation of a weighted directed graph.
         :param vertices: map of vertices to list of indices of connecting edges
-        :param edges: map of indices to list of tuples of vertices as (tail, head, weight)
+        :param edges: map of indices to list of tuples of vertices as (v0, v1, weight)
         """
         self.vertices = vertices
         self.edges = edges
         self.explored = None
 
     @classmethod
-    def from_string(cls, data: str, sep=' '):
+    def from_string(cls, data: str, sep=(' ', ',')):
         """
-        create a WeightedDirectedGraph instance with a line separated string representing directed graphs,
+        create a WeightedUndirectedGraph instance with a line separated string representing undirected graphs,
         with each line a delimited list of indices and weights.
         The first index refers to the vertice, and the later indices,weight pairs referring to the neighboring vertices
         :param data: the string representation
@@ -271,17 +273,20 @@ class WeightedDirectedGraph:
         for line in lines:
             if line == '':
                 continue
-            items = line.split(sep)
+            items = line.split(sep[0], 1)
             vertex = int(items[0])
             vertices[vertex] = []
             for edge in items[1:]:
                 if edge != '':
-                    head, weight = edge.split(',')
-                    edges.append((vertex, int(head), int(weight)))
+                    v1, weight = edge.split(sep[1])
+                    edges.append((vertex, int(v1), int(weight)))
         edges = {i: v for i, v in enumerate(edges)}
         for k, (v0, v1, w) in edges.items():
             for vertex in [v0, v1]:
-                vertices[vertex].append(k)
+                try:
+                    vertices[vertex].append(k)
+                except KeyError:
+                    vertices[vertex] = [k]
         return cls(vertices, edges)
 
     @classmethod
@@ -289,87 +294,80 @@ class WeightedDirectedGraph:
         """
         Create directed graph from lists of vertices and edges.
         :param vertices: list of vertices
-        :param edges: list of edges represented by (tail, head, weight)
-        :return: a WeightedDirectedGraph instance
+        :param edges: list of edges represented by (v0, v1, weight)
+        :return: a WeightedUndirectedGraph instance
         """
         vertices_dict = {k: [] for k in vertices}
         edges_dict = {}
         for i, edge in enumerate(edges):
-            tail, head, weight = edge
-            vertices_dict[tail].append(i)
-            if head != tail:
-                vertices_dict[head].append(i)
+            v0, v1, weight = edge
+            vertices_dict[v0].append(i)
+            if v1 != v0:
+                vertices_dict[v1].append(i)
             edges_dict[i] = edge
         return cls(vertices_dict, edges_dict)
 
-    def shortest_path(self, start_vertex: int, target_vertex: int = None) -> \
-            Union[Dict[int, Tuple[List[int], int]], Tuple[List[int], int]]:
+    def minimum_spanning_tree(self) -> WeightedUndirectedGraph:
         """
-        find the shortest path to vertices from a specific start.
-        If no target is specified, a dictionary containing the path length and path
-        for each of the vertices in the graph is returned.
-        If a target is specified, both the path length and the path to the target is returned
-        :param start_vertex: the starting vertex
-        :param target_vertex: the target vertex. defaults to None
-        :return:
-            dictionary of {target vertex: (shortest path, path length)} if no target is specified
-            tuple of (shortest path, path length) if a target is specified
+        Find the minimum spanning tree (MST) of the graph using Prim's algorithm
+        :return: the minimum spanning tree as a WeightedUndirectedGraph
         """
         self.explored = dict.fromkeys(list(self.vertices.keys()), False)
-        shortest_paths = dict.fromkeys(list(self.vertices.keys()), [])
-        shortest_paths[start_vertex] = [start_vertex]
-        shortest_path_length = dict.fromkeys(list(self.vertices.keys()), None)
-        shortest_path_length[start_vertex] = 0
+        start_vertex = next(iter(self.vertices))  # start at the first vertex for simplicity
         heap = MinHeap.from_array([(0, start_vertex)])
+        mst_edges = dict.fromkeys(list(self.vertices.keys()), None)  # store the edge connecting each vertex
 
         while heap:
-            path_length, vertex = heap.get()
+            weight, vertex = heap.get()  # get the next vertex with the least edge weight
             self.explored[vertex] = True
 
-            if target_vertex and target_vertex == vertex:
-                return shortest_paths[vertex], shortest_path_length[vertex]
-
             frontier_vertices = {}
-
             for edge in self.vertices[vertex]:
-                tail, head, weight = self.edges[edge]
-                if tail == vertex and not self.explored[head]:
-                    dijkstra_score = path_length + weight
-                    if head not in frontier_vertices or dijkstra_score < frontier_vertices[head]:
-                        frontier_vertices[head] = dijkstra_score
+                v0, v1, weight = self.edges[edge]
+                if self.explored[v0] and not self.explored[v1]:
+                    target = v1
+                elif self.explored[v1] and not self.explored[v0]:
+                    target = v0
+                else:
+                    target = None
+                if target and (target not in frontier_vertices or weight < frontier_vertices[target]):
+                    frontier_vertices[target] = weight
 
-            for head, dijkstra_score in frontier_vertices.items():
-                if head not in heap:
-                    heap.put((dijkstra_score, head))
-                    shortest_paths[head] = shortest_paths[vertex] + [head]
-                    shortest_path_length[head] = dijkstra_score
-                elif dijkstra_score < heap.get_key(head):
-                    heap.update((dijkstra_score, head))
-                    shortest_paths[head] = shortest_paths[vertex] + [head]
-                    shortest_path_length[head] = dijkstra_score
+            for target, weight in frontier_vertices.items():
+                if target not in heap:
+                    heap.put((weight, target))
+                    mst_edges[target] = (vertex, target, weight)
+                elif weight < heap.get_key(target):
+                    heap.update((weight, target))
+                    mst_edges[target] = (vertex, target, weight)
 
-        return {k: (path, shortest_path_length[k]) for k, path in shortest_paths.items()}
+        # construct a WeightedUndirectedGraph to represent the minimum spanning tree
+        mst = WeightedUndirectedGraph.index_edges(
+            list(self.vertices.keys()),
+            [edge for edge in mst_edges.values() if edge])  # there is no edge saved for the starting vertex
+        return mst
 
 
 class TestWeightedDirectedGraph(unittest.TestCase):
 
-    def test_shortest_path(self):
-        vertices = [0, 1, 2, 3]
-        edges = [(0, 1, 1), (0, 2, 4), (1, 2, 2), (1, 3, 6), (2, 3, 3)]
-        graph = WeightedDirectedGraph.index_edges(vertices=vertices, edges=edges)
-        paths = graph.shortest_path(0)
-        self.assertEqual(list(paths.values()), [([0], 0), ([0, 1], 1), ([0, 1, 2], 3), ([0, 1, 2, 3], 6)])
-        paths = graph.shortest_path(1, 3)
-        self.assertEqual(paths, ([1, 2, 3], 5))
+    def test_mst(self):
+        vertices = [1, 2, 3, 4]
+        edges = [(1, 2, 1), (2, 4, 2), (3, 1, 4), (4, 3, 5), (4, 1, 3)]
+        graph = WeightedUndirectedGraph.index_edges(vertices=vertices, edges=edges)
+        mst = graph.minimum_spanning_tree()
+        size = sum([weight for v0, v1, weight in mst.edges.values()])
+        self.assertEqual(size, 7)
 
 
 if __name__ == '__main__':
     unittest.main(exit=False)
 
-    with open(f'data/shortest_path.txt', mode='r') as f:
-        data = f.read()
-    graph = WeightedDirectedGraph.from_string(data, '\t')
-    paths = graph.shortest_path(1)
-    for target in [7, 37, 59, 82, 99, 115, 133, 165, 188, 197]:
-        print(paths[target])
-    print(','.join(str(paths[target][1]) for target in [7, 37, 59, 82, 99, 115, 133, 165, 188, 197]))
+    with open(f'data/mst.txt', mode='r') as f:
+        data = f.readlines()
+
+    n, m = data[0].split(' ')
+    graph = WeightedUndirectedGraph.from_string('\n'.join(data[1:]), (' ', ' '))
+    assert len(graph.vertices) == int(n)
+    assert len(graph.edges) == int(m)
+    mst = graph.minimum_spanning_tree()
+    print(f'Minimum spanning tree size: {sum([weight for v0, v1, weight in mst.edges.values()])}')
