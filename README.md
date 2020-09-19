@@ -3,18 +3,21 @@ Classic algorithms included in the Stanford [algorithm course](https://www.cours
 
 ## Alogorithms
 ### Arithmetic
-* Integer Multiplication: Karatsuba's algorithm
+* Integer Multiplication: [Karatsuba's algorithm](karatsuba_algorithm.py)
 ### Array
-* Merge Sort
-* Quick Sort
-* Linear Search
-* Inversion Count
+* [Merge Sort](merge_sort.py)
+* [Quick Sort](quick_sort.py)
+* [Linear Search](linear_search.py)
+* [Inversion Count](count_inversions.py)
 ### Graph
-* Minimum Cut: Karger's algorithm
-* Graph search: BFS, DFS, topological sort
-* Strongly Connected Components: Kosaraju's algorithm
-* Shortest path: BFS, Dijkstra's alogrithm
+* Minimum Cut: [Karger's algorithm](karger_min_cut.py)
+* Graph search: [BFS](graph_search.py), [DFS](graph_search.py), [topological sort](graph_search.py)
+* Strongly Connected Components: [Kosaraju's algorithm](graph_search.py)
+* Shortest path: [BFS](graph_search.py), [Dijkstra's alogrithm](dijsktra_shortest_path.py)
+* Minimum Spanning Tree: [Prim's algorithm](prim_mst.py)
+### Optimisation
+* [Greedy scheduling](greedy_scheduling.py)
 
 ## Data Structures
-* Heap
-* Hash table
+* [Heap](heap.py)
+* [Hash table](hash_table.py)
