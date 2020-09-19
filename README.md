@@ -1,7 +1,7 @@
 # Classic Algorithms
 Classic algorithms included in the Stanford [algorithm course](https://www.coursera.org/specializations/algorithms?) on Coursera, implemented in Python
 
-## Alogorithms
+## Algorithms
 ### Arithmetic
 * Integer Multiplication: [Karatsuba's algorithm](karatsuba_algorithm.py)
 ### Array
