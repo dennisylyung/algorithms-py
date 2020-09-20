@@ -1,6 +1,10 @@
 # Classic Algorithms
 Classic algorithms included in the Stanford [algorithm course](https://www.coursera.org/specializations/algorithms?) on Coursera, implemented in Python
 
+## Requirements
+
+* Python 3.7+
+
 ## Algorithms
 ### Arithmetic
 * Integer Multiplication: [Karatsuba's algorithm](karatsuba_algorithm.py)
@@ -21,3 +25,4 @@ Classic algorithms included in the Stanford [algorithm course](https://www.cours
 ## Data Structures
 * [Heap](heap.py)
 * [Hash table](hash_table.py)
+* [Union Find](union_find.py)
