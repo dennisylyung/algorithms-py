@@ -140,6 +140,9 @@ class LazyUnionFind(UnionFind):
     def union(self, element_1: Any, element_2: Any) -> None:
         root_1 = self.find(element_1)
         root_2 = self.find(element_2)
+        if root_1 == root_2:
+            return
+
         rank_1 = self.ranks[root_1]
         rank_2 = self.ranks[root_2]
 

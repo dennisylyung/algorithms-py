@@ -1,5 +1,5 @@
 import random
-from typing import List
+from typing import List, Sequence, Any, Callable
 
 
 def quick_sort(arr: List[int], pivot_strategy='random', start=0, end=None) -> int:
@@ -58,6 +58,45 @@ def quick_sort(arr: List[int], pivot_strategy='random', start=0, end=None) -> in
     if end > start:
         # sort right partition
         comparisons += quick_sort(arr, pivot_strategy, i, end)
+
+    # return count of comparisons for evaluation
+    # since sort is performed in place, array is not returned
+    return comparisons
+
+
+def general_quick_sort(arr: Sequence[Any], key_extractor: Callable[[Any], Any] = None, start=0, end=None) -> int:
+    if not key_extractor:
+        key_extractor = lambda x: x
+
+    if not end:
+        end = len(arr) - 1
+
+    if end - start <= 0:
+        return 0
+
+    pivot_idx = random.randint(start, end)
+
+    # swap first element with pivot
+    arr[start], arr[pivot_idx] = arr[pivot_idx], arr[start]
+
+    # partition around pivot
+    pivot = key_extractor(arr[start])
+    i = start + 1
+    for j in range(start + 1, end + 1):
+        if key_extractor(arr[j]) < pivot:
+            arr[i], arr[j] = arr[j], arr[i]
+            i += 1
+    arr[start], arr[i - 1] = arr[i - 1], arr[start]
+
+    # count comparisons for evaluation
+    comparisons = end - start
+
+    if i - 2 > start:
+        # sort left partition
+        comparisons += general_quick_sort(arr, key_extractor, start, i - 2)
+    if end > start:
+        # sort right partition
+        comparisons += general_quick_sort(arr, key_extractor, i, end)
 
     # return count of comparisons for evaluation
     # since sort is performed in place, array is not returned

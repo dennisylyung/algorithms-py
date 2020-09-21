@@ -18,7 +18,8 @@ Classic algorithms included in the Stanford [algorithm course](https://www.cours
 * Graph search: [BFS](graph_search.py), [DFS](graph_search.py), [topological sort](graph_search.py)
 * Strongly Connected Components: [Kosaraju's algorithm](graph_search.py)
 * Shortest path: [BFS](graph_search.py), [Dijkstra's alogrithm](dijsktra_shortest_path.py)
-* Minimum Spanning Tree: [Prim's algorithm](prim_mst.py)
+* Minimum Spanning Tree: [Prim's algorithm](prim_mst.py), [Kruskal's algorithm](max_spacing_clustering.py)
+* Clustering: [Maximum Spacing Clustering](max_spacing_clustering.py)
 ### Optimisation
 * [Greedy scheduling](greedy_scheduling.py)
 
