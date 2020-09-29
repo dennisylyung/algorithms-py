@@ -3,7 +3,7 @@ Classic algorithms included in the Stanford [algorithm course](https://www.cours
 
 ## Requirements
 
-* Python 3.7+
+* Python 3.8+
 
 ## Getting started
 
@@ -29,10 +29,12 @@ pip install -r requirements.txt
 * Minimum spanning tree: [Prim's algorithm](prim_mst.py), [Kruskal's algorithm](max_spacing_clustering.py)
 * Clustering: [Maximum Spacing Clustering](max_spacing_clustering.py)
 * Maximum weight independent set: [Dynamic programming](max_weight_independent_set.py)
+### NP Complete
+* Travelling Salesman Problem
+    * Exact: [Dynamic programming](travelling_salesman_exact.py)
 ### Others
 * Optimisation: [Greedy scheduling](greedy_scheduling.py)
 * Lossless compression: [Huffman Coding](huffman_coding.py)
-
 ## Data Structures
 * [Binary tree](binary_tree.py)
 * [Heap](heap.py)
