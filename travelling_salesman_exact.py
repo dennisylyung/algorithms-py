@@ -17,20 +17,11 @@ class EuclideanTravelingSalesman:
         self.locations = list(locations)
         self.dist = squareform(pdist(locations))
 
-    # def __dist(self, start: int, end: int) -> float:
-    #     """
-    #     Calculate the Euclidean distance between two points
-    #     :param start: index of starting location
-    #     :param end: index of ending location
-    #     :return: distance
-    #     """
-    #     return math.dist(self.locations[start], self.locations[end])
-
     def solve(self) -> Tuple[List[int], float]:
         """
         Compute an exact solution of the travelling salesman problem using dynamic programming.
         It runs in O(n**2 * 2**n) time
-        :return:
+        :return: Tour path in list of indices, length of tour
         """
         n = len(self.locations)  # assign location count to n for clarity
 
