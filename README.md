@@ -30,11 +30,12 @@ pip install -r requirements.txt
 * Clustering: [Maximum Spacing Clustering](max_spacing_clustering.py)
 * Maximum weight independent set: [Dynamic programming](max_weight_independent_set.py)
 ### NP Complete
-* Knapsack Problem: [(Exact) Integer weight dynamic programming](knapsack.py)
-* Travelling Salesman Problem: [(Exact) Dynamic programming](travelling_salesman_exact.py), [(Heuristic) Nearest neighbour](travelling_salesman_nn.py)
+* Knapsack problem: [(Exact) Integer weight dynamic programming](knapsack.py)
+* Travelling salesman problem: [(Exact) Dynamic programming](travelling_salesman_exact.py), [(Heuristic) Nearest neighbour](travelling_salesman_nn.py)
 ### Others
 * Optimisation: [Greedy scheduling](greedy_scheduling.py)
 * Lossless compression: [Huffman Coding](huffman_coding.py)
+* 2-satisfiability (2-SAT) problem: [Strongly-connected-components algorithm](two_sat.py)
 ## Data Structures
 * [Binary tree](binary_tree.py)
 * [Heap](heap.py)

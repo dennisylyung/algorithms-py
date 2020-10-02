@@ -1,6 +1,8 @@
 import unittest
 from queue import LifoQueue, Queue
-from typing import Dict, Tuple, List, Iterable, Iterator
+from typing import Dict, Tuple, List, Iterable, Iterator, Any
+
+from graphs import WeightedDirectedGraph as BaseGraph
 
 
 class UndirectedGraph:
@@ -20,10 +22,10 @@ class UndirectedGraph:
         """
         create a undirectedGraph instance with a line separated string representing undirected graphs,
         with each line a delimited list of indices.
-        The first index refers to the vertice, and the later indices referring to the neighboring vertices
+        The first index refers to the vertex, and the later indices referring to the neighboring vertices
         :param data: the string representation
         :param sep: delimiter in rows. defaults to ' '
-        :return: an UndirectedGraph instancew
+        :return: an UndirectedGraph instance
         """
         lines = data.split('\n')
         vertices = {}
@@ -111,70 +113,15 @@ class UndirectedGraph:
         return self.width_first_search(start_vertex)
 
 
-class DirectedGraph:
-
-    def __init__(self, vertices: Dict[int, List[int]], edges: Dict[int, Tuple[int, int]]):
-        """
-        Initialize an adjacency lists representation of a directed graph.
-        :param vertices: map of vertices to list of indices of connecting edges
-        :param edges: map of indices to list of tuples of vertices as (tail, head)
-        """
-        self.vertices = vertices
-        self.edges = edges
-        self.explored = None
-        self.returned = None
-
-    @classmethod
-    def from_string(cls, data: str, sep=' '):
-        """
-        create a DirectedGraph instance with a line separated string representing undirected graphs,
-        with each line a delimited list of indices.
-        The first index refers to the vertice, and the later indices referring to the neighboring vertices
-        :param data: the string representation
-        :param sep: delimiter in rows. defaults to ' '
-        :return: a DirectedGraph instance
-        """
-        lines = data.split('\n')
-        vertices = {}
-        edges = []
-        for line in lines:
-            if line == '':
-                continue
-            items = line.split(sep)
-            vertex = int(items[0])
-            vertices[vertex] = []
-            edges += [(vertex, int(i)) for i in items[1:] if i != '' and int(i) > vertex]
-        edges = {i: v for i, v in enumerate(edges)}
-        for k, v in edges.items():
-            for vertex in v:
-                vertices[vertex].append(k)
-        return cls(vertices, edges)
-
-    @classmethod
-    def index_edges(cls, vertices: Iterable[int], edges: Iterable[Tuple[int, int]]):
-        """
-        Create directed graph from lists of vertices and edges.
-        :param vertices: list of vertices
-        :param edges: list of edges represented by (tail, head)
-        :return: a DirectedGraph instance
-        """
-        vertices_dict = {k: [] for k in vertices}
-        edges_dict = {}
-        for i, edge in enumerate(edges):
-            tail, head = edge
-            vertices_dict[tail].append(i)
-            if head != tail:
-                vertices_dict[head].append(i)
-            edges_dict[i] = edge
-        return cls(vertices_dict, edges_dict)
+class DirectedGraph(BaseGraph):
 
     def __depth_first_search_recursion(self, start_vertex: int, reverse=False) -> Iterator[int]:
         self.explored[start_vertex] = True
         for edge in self.vertices[start_vertex]:
             if not reverse:
-                tail, head = self.edges[edge]
+                tail, head, _ = self.edges[edge]
             else:
-                head, tail = self.edges[edge]
+                head, tail, _ = self.edges[edge]
             if tail == start_vertex and not self.explored[head]:
                 yield from self.__depth_first_search_recursion(head, reverse)
         yield start_vertex
@@ -194,9 +141,9 @@ class DirectedGraph:
                 stack.put(vertex)  # put vertex to be yielded when all downstream vertexes are searched
                 for edge in self.vertices[vertex]:
                     if not reverse:
-                        tail, head = self.edges[edge]
+                        tail, head, _ = self.edges[edge]
                     else:
-                        head, tail = self.edges[edge]
+                        head, tail, _ = self.edges[edge]
                     if tail == vertex and not self.explored[head]:
                         stack.put(head)
 
@@ -218,7 +165,7 @@ class DirectedGraph:
         else:
             raise ValueError(f'unknown method {method}. Available methods are "recursion" or "stack"')
 
-    def find_scc(self, method=None) -> List[List[int]]:
+    def find_scc(self, method=None) -> List[List[Any]]:
         """
         Find strongly connected components (SCC) in the graph using Kosaraju's algorithm.
         :param method: method for performing depth-first search, one of {'recursion', 'stack'}.
@@ -226,27 +173,28 @@ class DirectedGraph:
             so please use 'stack' instead. Defaults to 'recursion'
         :return: list of SCCs represented by list of their vertices
         """
+        n = len(self.vertices)
 
         # first pass
-        sorted_vetices = []
-        self.explored = dict.fromkeys(list(self.vertices.keys()), False)
-        self.returned = dict.fromkeys(list(self.vertices.keys()), False) if method == 'stack' else None
+        sorted_vertices = []
+        self.explored = [False] * n
+        self.returned = [False] * n if method == 'stack' else None
 
-        for i, (vertex, _) in enumerate(self.vertices.items()):
+        for vertex in range(n):
             if not self.explored[vertex]:
                 for target in self.depth_first_search(vertex, reverse=True, method=method):
-                    sorted_vetices.append(target)
-        sorted_vetices.reverse()
+                    sorted_vertices.append(target)
+        sorted_vertices.reverse()
         print(f'SCC first pass finished')
 
         # second pass
         sccs = []
-        self.explored = dict.fromkeys(list(self.vertices.keys()), False)
-        self.returned = dict.fromkeys(list(self.vertices.keys()), False) if method == 'stack' else None
+        self.explored = [False] * n
+        self.returned = [False] * n if method == 'stack' else None
 
-        for i, vertex in enumerate(sorted_vetices):
+        for i, vertex in enumerate(sorted_vertices):
             if not self.explored[vertex]:
-                sccs.append([i for i in self.depth_first_search(vertex, method=method)])
+                sccs.append([self.vertex_value_map[i] for i in self.depth_first_search(vertex, method=method)])
         print(f'SCC second pass finished')
 
         return sccs
@@ -257,24 +205,26 @@ class DirectedGraph:
         :param method: method for performing depth-first search, one of {'recursion', 'stack'}.
             For large graphs, the recursion will fail due to "maximum recursion reached" exception,
             so please use 'stack' instead. Defaults to 'recursion'
-        :return: list of vertices sorted in ascending topoligical order
+        :return: list of vertices sorted in ascending topological order
         """
+        n = len(self.vertices)
         sorted_vertices = []
 
-        self.explored = dict.fromkeys(list(self.vertices.keys()), False)
-        self.returned = dict.fromkeys(list(self.vertices.keys()), False) if method == 'stack' else None
+        self.explored = [False] * n
+        self.returned = [False] * n if method == 'stack' else None
 
-        while len(sorted_vertices) < len(self.vertices):
-            start_vertex = next(k for k, v in self.explored.items() if not v)  # find first non-explored vertex
+        while len(sorted_vertices) < n:
+            start_vertex = next(i for i, v in enumerate(self.explored) if not v)  # find first non-explored vertex
             sink_vertex = next(self.depth_first_search(start_vertex, method=method))
             sorted_vertices.append(sink_vertex)
 
             # use the explored flags to cut out sorted vertices
-            self.explored = dict.fromkeys(list(self.vertices.keys()), False)
-            self.explored.update(dict.fromkeys(sorted_vertices, True))
+            self.explored = [False] * n
+            for i in sorted_vertices:
+                self.explored[i] = True
 
         sorted_vertices.reverse()
-        return sorted_vertices
+        return [self.vertex_value_map[i] for i in sorted_vertices]
 
 
 class TestUndirectedGraph(unittest.TestCase):
@@ -299,7 +249,8 @@ class TestDirectedGraph(unittest.TestCase):
     def test_sccs_recursion(self):
         graph = DirectedGraph.index_edges(
             vertices=range(1, 10),
-            edges=[(1, 4), (2, 8), (3, 6), (4, 7), (5, 2), (6, 9), (7, 1), (8, 5), (8, 6), (9, 7), (9, 3)]
+            edges=[(1, 4, 1), (2, 8, 1), (3, 6, 1), (4, 7, 1), (5, 2, 1), (6, 9, 1), (7, 1, 1), (8, 5, 1), (8, 6, 1),
+                   (9, 7, 1), (9, 3, 1)]
         )
         sccs = graph.find_scc(method='recursion')
         scc_sizes = [len(scc) for scc in sccs]
@@ -308,7 +259,8 @@ class TestDirectedGraph(unittest.TestCase):
     def test_sccs_stack(self):
         graph = DirectedGraph.index_edges(
             vertices=range(1, 10),
-            edges=[(1, 4), (2, 8), (3, 6), (4, 7), (5, 2), (6, 9), (7, 1), (8, 5), (8, 6), (9, 7), (9, 3)]
+            edges=[(1, 4, 1), (2, 8, 1), (3, 6, 1), (4, 7, 1), (5, 2, 1), (6, 9, 1), (7, 1, 1), (8, 5, 1), (8, 6, 1),
+                   (9, 7, 1), (9, 3, 1)]
         )
         sccs = graph.find_scc(method='stack')
         scc_sizes = [len(scc) for scc in sccs]
@@ -316,10 +268,10 @@ class TestDirectedGraph(unittest.TestCase):
 
     def test_topological_sort(self):
         vertices = [1, 2, 3, 4, 5, 6, 7]
-        edges = [(1, 2), (1, 3), (2, 4), (2, 5), (3, 6), (4, 7), (5, 7), (6, 7)]
+        edges = [(1, 2, 1), (1, 3, 1), (2, 4, 1), (2, 5, 1), (3, 6, 1), (4, 7, 1), (5, 7, 1), (6, 7, 1)]
         graph = DirectedGraph.index_edges(vertices=vertices, edges=edges)
         sorted_indices = graph.topological_sort(method='stack')
-        for tail, head in edges:
+        for tail, head, _ in edges:
             # assert no inversions
             self.assertTrue(sorted_indices.index(tail) < sorted_indices.index(head))
 
@@ -334,7 +286,7 @@ if __name__ == '__main__':
         for line in f.readlines():
             vertices = line.split(' ')
             try:
-                edges.append((int(vertices[0]), int(vertices[1])))
+                edges.append((int(vertices[0]), int(vertices[1]), 1))
                 vertices_set.add(int(vertices[0]))
                 vertices_set.add(int(vertices[1]))
             except Exception as e:
@@ -342,7 +294,7 @@ if __name__ == '__main__':
                 continue
     print(f'{len(vertices_set)} vertices, {len(edges)} edges loaded from file')
 
-    graph = DirectedGraph.index_edges(vertices_set, edges)
+    graph = DirectedGraph.index_edges(list(vertices_set), edges)
     print('graph created from indexing edges')
 
     s = time.time()

@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Sequence
+from typing import Dict, List, Tuple, Sequence, Any
 
 
 class WeightedDirectedGraph:
@@ -61,7 +61,7 @@ class WeightedDirectedGraph:
         return cls(vertices, edges, vertex_key_map, vertex_value_map)
 
     @classmethod
-    def index_edges(cls, vertices: Sequence[int], edges: Sequence[Tuple[int, int, int]]):
+    def index_edges(cls, vertices: Sequence[Any], edges: Sequence[Tuple[Any, Any, int]]):
         """
         Create directed graph from lists of vertices and edges.
         :param vertices: list of vertices
