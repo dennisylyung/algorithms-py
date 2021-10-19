@@ -17,7 +17,8 @@ pip install -r requirements.txt
 ### Arithmetic
 * Integer multiplication: [Karatsuba's algorithm](karatsuba_algorithm.py)
 ### Array
-* Sort: [Merge Sort](merge_sort.py), [Quick Sort](quick_sort.py)
+
+* Sort: [Merge Sort](merge_sort.py), [Quick Sort](quick_sort.py), [Insertion Sort](insertion_sort.py)
 * Search: [Linear Search](linear_search.py)
 * Inversions: [Inversion Count](count_inversions.py)
 ### Graph
