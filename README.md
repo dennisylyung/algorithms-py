@@ -1,5 +1,8 @@
-# Classic Algorithms
-Classic algorithms included in the Stanford [algorithm course](https://www.coursera.org/specializations/algorithms?) on Coursera, implemented in Python.
+# Algorithms & Data structures in Python
+
+A lot of classic algorithms and data structures, implemented in Python for my own learning. From the
+Stanford [algorithm course](https://www.coursera.org/specializations/algorithms?) on Coursera, as well as many others
+that I found fun to implement.
 
 ## Requirements
 
@@ -38,7 +41,9 @@ pip install -r requirements.txt
 * Lossless compression: [Huffman Coding](huffman_coding.py)
 * 2-satisfiability (2-SAT) problem: [Strongly-connected-components algorithm](two_sat.py)
 ## Data Structures
+
 * [Binary tree](binary_tree.py)
+* [B+ tree](b_plus_tree.py)
 * [Heap](heap.py)
 * [Hash table](hash_table.py)
 * [Union find](union_find.py)
