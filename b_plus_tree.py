@@ -11,12 +11,14 @@ V = TypeVar("V")
 class BPlusTree(Generic[K, V]):
     """
     B+ Tree that supports search and insert.
-    Insert with tree[key] = value
-    Get with tree[key]
+    Insert with:                tree[key] = value
+    Get with:                   tree[key]
+    Slice (inclusive) with:     tree[key1:key2]
+    Delete with:                del tree[key]
     """
 
     def __init__(self, b: int):
-        self.root = _BPlusTreeImpl[K, V](b)
+        self.root: _BPlusTreeImpl[K, V] = _BPlusTreeImpl(b)
 
     def __setitem__(self, key: K, value: V) -> None:
         self.root.insert(key, value)
@@ -29,6 +31,9 @@ class BPlusTree(Generic[K, V]):
             return self.root.get_range(key.start, key.stop)
         elif isinstance(key, int):
             return self.root.search(key)
+
+    def __delitem__(self, key: K):
+        self.root.delete(key)
 
     def __len__(self) -> int:
         return len(self.root)
@@ -53,8 +58,25 @@ class _BPlusTreeImpl(Generic[K, V]):
         return self.children[-2] is not None
 
     @property
+    def is_underfull(self) -> bool:
+        min_nodes = ceil(self.b / 2) * 2
+        return self.parent is not None and self.children[min_nodes - 1] is None
+
+    @property
+    def is_single_child_parent(self) -> bool:
+        return (
+                self.parent is None and
+                type(self.children[1]) is _BPlusTreeImpl and
+                self.children[1] is None
+        )
+
+    @property
     def is_leaf(self) -> bool:
-        return type(self.children[2]) is not _BPlusTreeImpl
+        return type(self.children[0]) is not _BPlusTreeImpl
+
+    @property
+    def num_keys(self) -> int:
+        return sum([1 for i in range(1, self.node_len, 2) if self.children[i] is not None])
 
     def get_root(self) -> _BPlusTreeImpl[K, V]:
         if self.parent is not None:
@@ -69,8 +91,7 @@ class _BPlusTreeImpl(Generic[K, V]):
                 target = self.children[i - 1]
                 if type(target) is not _BPlusTreeImpl:
                     return target
-            else:
-                raise KeyError
+            raise KeyError
         else:
             target = self.children[i + 1 if i % 2 else i]
             if target:
@@ -123,6 +144,26 @@ class _BPlusTreeImpl(Generic[K, V]):
             else:
                 self.children[i + 1 if i % 2 else i].insert(key, value)
 
+    def delete(self, key: K, delete_node=False) -> None:
+        i = self._index(key)
+        if not self.is_leaf and not delete_node:
+            target = self.children[i + 1 if i % 2 else i]
+            if target:
+                target.delete(key)
+            else:
+                raise KeyError
+        else:
+            if i % 2 == 0:  # no exact match
+                raise KeyError
+            elif type(self.children[i - 1]) is _BPlusTreeImpl and not delete_node:
+                raise KeyError
+            else:
+                self.children[i - 1:] = self.children[i + 1:] + [None, None]
+                if self.is_single_child_parent:
+                    self.children = self.children[1].children
+                elif self.is_underfull:
+                    self.parent._merge_or_redistribute(self)
+
     def __len__(self) -> int:
         if self.is_leaf:
             non_empty_nodes = sum([1 for n in self.children if n is not None])
@@ -151,13 +192,12 @@ class _BPlusTreeImpl(Generic[K, V]):
         Union[None, K, V, _BPlusTreeImpl[K, V]]]) -> None:
         mid_point = ceil((self.node_len + 2) / 2)
         new_node = _BPlusTreeImpl(self.b, self.parent, resulting_children[mid_point:])
-        if self.is_leaf:
+        self.children = [None] * self.node_len
+        if new_node.is_leaf:
             split_value = resulting_children[mid_point + 1]
-            self.children = [None] * self.node_len
             self.children[:mid_point + 1] = resulting_children[:mid_point] + [new_node]
         else:
             split_value = resulting_children[mid_point - 1]
-            self.children = [None] * self.node_len
             self.children[:mid_point - 1] = resulting_children[:mid_point - 1]
         new_node._sync_children()
         self._sync_children()
@@ -168,6 +208,46 @@ class _BPlusTreeImpl(Generic[K, V]):
             new_node.parent = parent
             self.parent = parent
             pass
+
+    def _merge_or_redistribute(self, underfull_node: _BPlusTreeImpl[K, V]) -> None:
+        i = self.children.index(underfull_node)
+        if i > 0:
+            key_i, right_i = i - 1, i
+            left_node = self.children[i - 2]
+            merge_key = self.children[i - 1]
+            right_node = underfull_node
+        else:
+            key_i, right_i = i + 1, i + 2
+            left_node = underfull_node
+            merge_key = self.children[i + 1]
+            right_node = self.children[i + 2]
+
+        left_size = left_node.num_keys * 2
+        right_size = right_node.num_keys * 2 + 1
+        if left_node.is_leaf:
+            resulting_children = left_node.children[:left_size] + right_node.children[:right_size]
+        else:
+            resulting_children = left_node.children[:left_size + 1] + [merge_key] + right_node.children[:right_size]
+
+        if len(resulting_children) <= self.node_len:
+            left_node.children = resulting_children  # must use left node to maintain leaf pointers
+            left_node._sync_children()
+            self.children[right_i] = left_node
+            self.delete(merge_key, delete_node=True)
+        else:
+            mid_point = ceil((self.node_len + 2) / 2)
+            left_node.children = [None] * self.node_len
+            right_node.children = [None] * self.node_len
+            right_node.children[:mid_point] = resulting_children[mid_point:]
+            if right_node.is_leaf:
+                split_value = resulting_children[mid_point + 1]
+                left_node[:mid_point + 1] = resulting_children[:mid_point] + [right_node]
+            else:
+                split_value = resulting_children[mid_point - 1]
+                left_node[:mid_point - 1] = resulting_children[:mid_point - 1]
+            left_node._sync_children()
+            right_node._sync_children()
+            self.children[key_i] = split_value
 
     def _sync_children(self) -> None:
         if self.is_leaf:
@@ -180,7 +260,7 @@ class _BPlusTreeImpl(Generic[K, V]):
 class BPlusTreeImplTest(TestCase):
 
     def setUp(self):
-        self.tree = _BPlusTreeImpl[int, str](b=4)
+        self.tree: _BPlusTreeImpl[float, str] = _BPlusTreeImpl(b=4)
         children = []
         for i in range(1, 5):
             children += [f'data_{i}', i]
@@ -206,6 +286,17 @@ class BPlusTreeImplTest(TestCase):
         self.tree.insert(2.5, 'data_2.5')
         self.assertEqual('data_2.5', self.tree.get_root().search(2.5))
 
+    def test_simple_delete(self):
+        self.tree.delete(3)
+        expected = [
+            'data_1', 1,
+            'data_2', 2,
+            'data_4', 4,
+            'next_pointer',
+            None, None
+        ]
+        self.assertEqual(expected, self.tree.children)
+
 
 class BPlusTreeUITest(TestCase):
 
@@ -228,3 +319,9 @@ class BPlusTreeUITest(TestCase):
     def test_insert(self):
         self.tree[100] = 'data_100'
         self.assertEqual('data_100', self.tree[100])
+
+    def test_delete(self):
+        del self.tree[10]
+        del self.tree[11]
+        expected = ['data_7', 'data_8', 'data_9', 'data_12', 'data_13', 'data_14', 'data_15']
+        self.assertEqual(expected, self.tree[7:15])
