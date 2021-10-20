@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import ceil
+from math import ceil, floor
 from typing import TypeVar, Generic, Union, List, Generator, Tuple
 from unittest import TestCase
 
@@ -24,6 +24,9 @@ class BPlusTree(Generic[K, V]):
 
     def __getitem__(self, key: K) -> V:
         return self.root.search(key)
+
+    def __len__(self) -> int:
+        return len(self.root)
 
 
 class _BPlusTreeImpl(Generic[K, V]):
@@ -49,7 +52,7 @@ class _BPlusTreeImpl(Generic[K, V]):
         return type(self.children[2]) is not _BPlusTreeImpl
 
     def get_root(self) -> _BPlusTreeImpl[K, V]:
-        if self.parent:
+        if self.parent is not None:
             return self.parent.get_root()
         else:
             return self
@@ -86,6 +89,13 @@ class _BPlusTreeImpl(Generic[K, V]):
             else:
                 self.children[i + 1 if i % 2 else i].insert(key, value)
 
+    def __len__(self) -> int:
+        if self.is_leaf:
+            non_empty_nodes = sum([1 for n in self.children if n is not None])
+            return floor(non_empty_nodes / 2)
+        else:
+            return sum([len(self.children[i]) for i in range(0, self.node_len, 2) if self.children[i] is not None])
+
     def _iter_nodes(self) -> Generator[Tuple[int, Union[None, K, V, Generic[K, V]], Union[None, K, V, Generic[K, V]]]]:
         for i in range(0, self.node_len, 2):
             yield i, self.children[i], self.children[i + 1] if i < self.node_len - 1 else None
@@ -114,7 +124,7 @@ class _BPlusTreeImpl(Generic[K, V]):
             new_node = _BPlusTreeImpl(self.b, None, temp_nodes[:mid_point - 1])
         self.children = [None] * self.node_len
         self.children[:len(temp_nodes) - mid_point] = temp_nodes[mid_point:]
-        if self.parent:
+        if self.parent is not None:
             self.parent.insert(split_value, new_node)
         else:
             parent = _BPlusTreeImpl(self.b, None, [new_node, split_value, self])
@@ -123,9 +133,9 @@ class _BPlusTreeImpl(Generic[K, V]):
 
 
 class BPlusTreeImplTest(TestCase):
-    tree = _BPlusTreeImpl[int, str](b=4)
 
     def setUp(self):
+        self.tree = _BPlusTreeImpl[int, str](b=4)
         children = []
         for i in range(1, 5):
             children += [f'data_{i}', i]
@@ -153,11 +163,14 @@ class BPlusTreeImplTest(TestCase):
 
 
 class BPlusTreeUITest(TestCase):
-    tree = BPlusTree[int, str](b=4)
 
     def setUp(self):
+        self.tree = BPlusTree[int, str](b=4)
         for i in range(50):
             self.tree[i] = f'data_{i}'
+
+    def test_len(self):
+        self.assertEqual(50, len(self.tree))
 
     def test_get(self):
         for i in range(50, 7):
