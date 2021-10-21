@@ -38,9 +38,16 @@ class TestSolution(TestCase):
             else:
                 raise AssertionError
 
-    def test(self):
+    def test_1(self):
         points = [0, 2, 6, 9, 11]
         intervals = [(0, 2), (2, 11), (6, 9), (9, 11)]
         selected_intervals = find_cover(points, intervals)
         self.assertEqual(2, len(selected_intervals))
+        self.assertValid(points, intervals, selected_intervals)
+
+    def test_2(self):
+        points = [0, 2, 6, 9, 11, 12, 16, 18, 21]
+        intervals = [(0, 6), (1, 7), (3, 9), (2, 11), (10, 16), (12, 17), (13, 19), (19, 25)]
+        selected_intervals = find_cover(points, intervals)
+        self.assertEqual(5, len(selected_intervals))
         self.assertValid(points, intervals, selected_intervals)
