@@ -37,11 +37,11 @@ pip install -r requirements.txt
 * Knapsack problem: [(Exact) Integer weight dynamic programming](knapsack.py)
 * Travelling salesman problem: [(Exact) Dynamic programming](travelling_salesman_exact.py), [(Heuristic) Nearest neighbour](travelling_salesman_nn.py)
 ### Others
+* Set cover: [Greedy 1D interval cover algorithm](interval_set_cover.py)
 * Optimisation: [Greedy scheduling](greedy_scheduling.py)
 * Lossless compression: [Huffman Coding](huffman_coding.py)
 * 2-satisfiability (2-SAT) problem: [Strongly-connected-components algorithm](two_sat.py)
 ## Data Structures
-
 * [Binary tree](binary_tree.py)
 * [B+ tree](b_plus_tree.py)
 * [Heap](heap.py)
